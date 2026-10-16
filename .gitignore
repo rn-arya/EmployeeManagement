@@ -1,0 +1,50 @@
+## Basic .NET Core / .NET 8 Rules
+bin/
+obj/
+
+## User-specific files and local settings
+*.user
+*.userosscache
+*.sln.docstates
+
+## Rider, Visual Studio, and VS Code IDE files
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.clw
+*.ncb
+*.pfx
+*.ids
+*.suo
+*.pdb
+*.dbmdl
+*.jfm
+
+## EF Core Migrations & DB local file output
+# Keep your migration code (.cs files), but ignore local database engine files
+*.db
+*.db-shm
+*.db-wal
+*.sqlsuo
+App_Data/
+
+## Secrets and App Settings (Crucial for security)
+# Never commit your production secrets or local connection strings
+**/appsettings.Development.json
+**/appsettings.Local.json
+secrets.json
+.env
+
+## Publish / Build Output
+publish/
+*.g.cs
+*.g.i.cs
+
+## Operating System files
+Thumbs.db
+.DS_Store
