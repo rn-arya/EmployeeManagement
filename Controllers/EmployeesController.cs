@@ -9,16 +9,16 @@ namespace EmployeeManagement.Api.Controllers
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        public EmployeesController(AppDbContext context)
+        private readonly IEmployeeRepository _employeeRepository;
+        public EmployeesController(IEmployeeRepository employeeRepository)
         {
-            _context = context;
+            _employeeRepository = employeeRepository;
         }
        
         [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployeeById(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
             if (employee == null)
             {
                 return NotFound();
@@ -29,15 +29,13 @@ namespace EmployeeManagement.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
         {
-            return await _context.Employees.ToListAsync();
+            return Ok(await _employeeRepository.GetEmployeesAsync());
         }
 
         [HttpPost]
         public async Task<ActionResult<Employee>> AddEmployee(Employee employee)
         {
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
-
+            await _employeeRepository.AddEmployeeAsync(employee);
             return Ok(employee);
         }
     }
