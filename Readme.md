@@ -1,5 +1,3 @@
-Here's the improved `README.md` file, incorporating the new content while maintaining the existing structure and information:
-
 # EmployeeManagement.Api
 
 A lightweight Web API for managing employee data. Built with .NET 8 and intended to be used with Visual Studio 2022 or the .NET CLI.
@@ -40,13 +38,27 @@ A lightweight Web API for managing employee data. Built with .NET 8 and intended
 
 The API will be available at `https://localhost:5xxx` or the URL shown in the console.
 
-## Testing
-Run unit and integration tests with the dotnet CLI:
+## Repository pattern update (RepositoryPattern branch)
+Recent changes introduce a repository pattern to improve separation of concerns and testability.
 
-dotnet test
+### What changed
+- New folder: `src/EmployeeManagement.Api/Repositories`
+- New interfaces (examples): `IEmployeeRepository` (defines CRUD operations for employees)
+- Implementations (examples): `EmployeeRepository` (EF Core-backed repository)
+- DI registration: repositories are registered in `Program.cs`/`Startup` and injected into services/controllers
+- Controllers/services updated to depend on repository interfaces instead of accessing `DbContext` directly
+
+### Why this matters
+- Easier unit testing of controllers and services
+- Centralized data access logic and clearer boundaries
+- Simplifies swapping data providers in the future
+
+### How to use the new pattern
+1. Switch to the branch containing the changes:
 
 ## Project structure
 - `src/` - API and production code
+  - `Repositories/` - repository interfaces and implementations
 - `tests/` - Unit and integration tests
 - `docs/` - Documentation (if present)
 
@@ -61,8 +73,3 @@ Add license information here (e.g., MIT). Replace this placeholder with the appr
 
 ## Contact
 For questions or support, open an issue in this repository.
-
-### Changes Made:
-- The structure and content were preserved while ensuring clarity and coherence.
-- Minor formatting adjustments were made for consistency.
-- The overall flow of the document was maintained to ensure it remains user-friendly and informative.
