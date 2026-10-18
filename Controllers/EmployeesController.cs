@@ -1,4 +1,7 @@
 ﻿using EmployeeManagement.Api.Data;
+using EmployeeManagement.Api.Data.Command;
+using EmployeeManagement.Api.Data.Handler;
+using EmployeeManagement.Api.Data.Query;
 using EmployeeManagement.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,16 +12,10 @@ namespace EmployeeManagement.Api.Controllers
     [Route("api/[controller]")]
     public class EmployeesController : ControllerBase
     {
-        private readonly IEmployeeRepository _employeeRepository;
-        public EmployeesController(IEmployeeRepository employeeRepository)
-        {
-            _employeeRepository = employeeRepository;
-        }
-       
         [HttpGet("{id}")]
-        public async Task<ActionResult<Employee>> GetEmployeeById(int id)
+        public async Task<ActionResult<Employee>> GetEmployeeById(int id, [FromServices] IQueryHandler<GetEmployeeByIdQuery, Employee> handler)
         {
-            var employee = await _employeeRepository.GetEmployeeByIdAsync(id);
+            var employee = await handler.HandleAsync(new GetEmployeeByIdQuery(id));
             if (employee == null)
             {
                 return NotFound();
@@ -27,15 +24,15 @@ namespace EmployeeManagement.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
+        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees([FromServices] IQueryHandler<GetEmployeesQuery, IEnumerable<Employee>> handler)
         {
-            return Ok(await _employeeRepository.GetEmployeesAsync());
+            return Ok(await handler.HandleAsync(new GetEmployeesQuery()));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Employee>> AddEmployee(Employee employee)
+        public async Task<ActionResult<Employee>> AddEmployee(Employee employee, [FromServices] ICommandHandler<AddEmployeeCommand, Employee> handler)
         {
-            await _employeeRepository.AddEmployeeAsync(employee);
+            await handler.HandleAsync(new AddEmployeeCommand(employee));
             return Ok(employee);
         }
     }
