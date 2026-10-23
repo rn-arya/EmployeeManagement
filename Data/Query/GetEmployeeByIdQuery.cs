@@ -3,13 +3,5 @@ using MediatR;
 
 namespace EmployeeManagement.Api.Data.Query
 {
-    public class GetEmployeeByIdQuery : IRequest<Employee>
-    {
-        public int Id { get; }
-
-        public GetEmployeeByIdQuery(int id)
-        {
-            Id = id;
-        }
-    }
+        public record GetEmployeeByIdQuery(int Id) : IRequest<Employee>;
 }
