@@ -1,9 +1,9 @@
-﻿using EmployeeManagement.Api.Data.Handler;
+﻿using MediatR;
 using EmployeeManagement.Api.Models;
 
 namespace EmployeeManagement.Api.Data.Query
 {
-    public class GetEmployeesQuery : IQuery<IEnumerable<Employee>>
+    public class GetEmployeesQuery : IRequest<IEnumerable<Employee>>
     {
     }
 }

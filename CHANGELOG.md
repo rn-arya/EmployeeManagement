@@ -7,29 +7,28 @@ https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 ### Added
-- Implemented a Pure CQRS (Command Query Responsibility Segregation) architecture.
-  - New folders under `src/EmployeeManagement.Api`:
-    - `Application/Commands`, `Application/Queries`
-    - `Application/Handlers/Commands`, `Application/Handlers/Queries`
-    - `Application/ReadModels`, `Application/DTOs`
-    - `Domain`, `Infrastructure/Persistence`
-  - Introduced command and query DTOs and dedicated handlers for employee operations (for example `CreateEmployeeCommand` / `CreateEmployeeHandler`, `GetEmployeeByIdQuery` / `GetEmployeeByIdHandler`, `ListEmployeesQuery`).
-  - Added in-process mediator registration (e.g., MediatR) and handler discovery.
-  - Added mapping layer guidance (optional AutoMapper/Mapster) and read-models optimized for queries.
-  - Updated DI registrations in `Program.cs` to register mediator and handlers.
+- Added MediatR-based command/query handling for employee operations.
+- Added `AddEmployeeCommand` and `GetEmployeesQuery` request types.
+- Added dedicated handlers for adding, listing, and retrieving employees by ID.
+- Added automatic MediatR handler discovery during application startup.
 
 ### Changed
-- Replaced the repository pattern with command/query handlers; controllers and application logic now send Commands and Queries to the mediator instead of calling repositories or `DbContext` directly.
-- Controller endpoints updated to use `IMediator` (or custom mediator) for orchestration.
-- Tests updated to focus on handler unit tests and mediator-based integration tests; repository mocks removed where applicable.
+- Updated `EmployeesController` to send commands and queries through `IMediator` instead of orchestrating employee operations directly.
+- Updated MediatR request handlers to implement the library interfaces `IRequestHandler<,>` and return application responses.
+- Updated employee commands and queries to implement `IRequest<,>` or `IRequest<>`.
+- Updated `Program.cs` to register MediatR and remove manual custom handler registrations.
+- Added MediatR 14.2.0 to the project dependencies.
 
 ### Fixed
-- n/a
+- Removed the custom `ICommandHandler` and `IQueryHandler` abstractions that were redundant with MediatR interfaces.
+- Corrected the employee controller flow to use the current request/handler contracts.
 
 ### Breaking
-- Removal of repository interfaces and direct `ApplicationDbContext` usage from controllers and services.
-- Code that previously used `IEmployeeRepository` or direct `DbContext` access must be refactored to use commands/queries or tested via handler-level tests.
-- Update existing tests that depended on repositories to either mock `IMediator` or test handlers directly.
+- Existing custom code that implements `ICommandHandler` or `IQueryHandler` must use the MediatR `IRequestHandler<,>` interface instead.
+- Direct controller-level orchestration has been replaced with mediator sends.
+
+### Architecture note
+- Employee reads and writes now use MediatR handlers, while persistence remains behind `IEmployeeRepository` and `EmployeeRepository`. This is a CQRS-style command/query split with a shared repository and database context; it is not a separate read/write database implementation.
 
 ## [0.1.0] - 2026-10-16
 ### Added

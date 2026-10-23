@@ -1,10 +1,10 @@
-﻿using EmployeeManagement.Api.Data.Handler;
+﻿using MediatR;
 using EmployeeManagement.Api.Models;
-using System.Windows.Input;
+
 
 namespace EmployeeManagement.Api.Data.Command
 {
-    public class AddEmployeeCommand : ICommand<Employee>
+    public class AddEmployeeCommand : IRequest<Employee>
     {
         public Employee Employee { get; }
 
