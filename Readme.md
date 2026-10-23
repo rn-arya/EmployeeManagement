@@ -1,82 +1,72 @@
 # EmployeeManagement.Api
 
-A lightweight Web API for managing employee data. Built with .NET 8 and intended to be used with Visual Studio 2022 or the .NET CLI.
+A lightweight .NET 8 Web API for managing employee records. It uses ASP.NET Core controllers, Entity Framework Core with SQL Server LocalDB, and MediatR to dispatch commands and queries through dedicated handlers.
 
 ## Features
-- RESTful endpoints for employee CRUD operations
-- Designed for easy extension and integration with common data stores
-- Built with .NET 8 SDK
+- RESTful employee operations
+- MediatR-based Pure CQRS request and handler separation
+- Employee add, list, and lookup operations
+- Repository-based Entity Framework Core data access
+- Swagger/OpenAPI documentation in development
+- SQL Server LocalDB configuration
+
+## Current architecture
+- `Controllers/EmployeesController.cs` receives HTTP requests and sends MediatR requests.
+- `Data/Command` contains write requests such as `AddEmployeeCommand`.
+- `Data/Query` contains read requests such as `GetEmployeeByIdQuery` and `GetEmployeesQuery`.
+- `Data/Handler` contains the corresponding MediatR request handlers.
+- `Data/IEmployeeRepository.cs` and `Data/EmployeeRepository.cs` encapsulate persistence operations.
+- `Data/AppDbContext.cs` configures Entity Framework Core for the employee entity.
+- `Models/Employee.cs` defines the employee data model.
+
+This implementation separates application write and read requests into commands and queries. Controllers use MediatR instead of directly orchestrating employee operations, and dedicated handlers use the repository layer for persistence.
 
 ## Prerequisites
 - .NET 8 SDK
-- Visual Studio 2022 (17.5+) or later (recommended)
-- Optional: SQL Server / PostgreSQL / other DB depending on configured provider
+- Visual Studio 2022 17.5 or later, or the .NET CLI
+- SQL Server LocalDB for the default configuration
 
 ## Getting started
-1. Clone the repository:
 
-   git clone https://github.com/rn-arya/EmployeeManagement.git
-   cd EmployeeManagement.Api
+```powershell
+git clone https://github.com/rn-arya/EmployeeManagement.git
+cd EmployeeManagement/EmployeeManagement.Api
+dotnet restore
+dotnet build
+dotnet run
+```
 
-2. Restore packages and build (dotnet CLI):
+The default `DefaultConnection` setting uses SQL Server LocalDB and the `EmployeeManagement` database. Update `appsettings.json`, user secrets, or an environment-specific settings file for a different database.
 
-   dotnet restore
-   dotnet build
+The Development launch profile opens Swagger. The default HTTP and HTTPS URLs are defined in `Properties/launchSettings.json`.
 
-3. Configure the application:
-- Edit `appsettings.json` or user secrets to set the connection string and other environment-specific settings.
-- If the project uses EF Core, update the `ConnectionStrings:Default` entry appropriately and run migrations.
+## API endpoints
 
-4. Run the API:
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/Employees/{id}` | Returns one employee by ID, or `404` when not found. |
+| `GET` | `/api/Employees` | Returns all employees. |
+| `POST` | `/api/Employees` | Adds an employee and returns it in the response. |
 
-- Using Visual Studio 2022: Open the solution and press F5 or use `Debug > Start Debugging`.
-- Using the CLI:
-  ```bash
-  cd src/EmployeeManagement.Api
-  dotnet run
-  ```
-
-The API will be available at `https://localhost:5xxx` or the URL shown in the console.
-
-## Repository pattern update (RepositoryPattern branch)
-Recent changes introduce a repository pattern to improve separation of concerns and testability.
-
-### What changed
-- New folder: `src/EmployeeManagement.Api/Repositories`
-- New interfaces (examples): `IEmployeeRepository` (defines CRUD operations for employees)
-- Implementations (examples): `EmployeeRepository` (EF Core-backed repository)
-- DI registration: repositories are registered in `Program.cs`/`Startup` and injected into services/controllers
-- Controllers/services updated to depend on repository interfaces instead of accessing `DbContext` directly
-
-### Why this matters
-- Easier unit testing of controllers and services
-- Centralized data access logic and clearer boundaries
-- Simplifies swapping data providers in the future
-
-### How to use the new pattern
-1. Switch to the branch containing the changes:
+The API is documented with Swagger while running in the Development environment.
 
 ## Project structure
-- `src/` - API and production code
-  - `Repositories/` - repository interfaces and implementations
-- `tests/` - Unit and integration tests
-- `docs/` - Documentation (if present)
 
-## Coding standards
-This repository follows coding and formatting rules specified in `.editorconfig` and `CONTRIBUTING.md`. Please follow those files when contributing.
+```text
+Controllers/EmployeesController.cs  HTTP endpoints and mediator dispatch
+Data/Command/                      MediatR write requests
+Data/Query/                        MediatR read requests
+Data/Handler/                      MediatR request handlers
+Data/AppDbContext.cs               Entity Framework Core database context
+Data/EmployeeRepository.cs         Employee persistence implementation
+Data/IEmployeeRepository.cs        Persistence contract
+Models/Employee.cs                 Employee entity
+Program.cs                         Application startup and dependency injection
+```
 
-## Contributing
-See `CONTRIBUTING.md` for contribution guidelines, commit message format, and branching strategy.
+## Pure CQRS with MediatR (Unreleased)
 
-## License
-Add license information here (e.g., MIT). Replace this placeholder with the appropriate license file or link.
-
-## Contact
-For questions or support, open an issue in this repository.
-
-## Pure CQRS Pattern (Unreleased)
-
-This project has been updated to use a Pure CQRS (Command Query Responsibility Segregation) architecture. The README should include the following guidance to help contributors understand the new structure, DI changes, and migration steps.
+This project uses Pure CQRS principles with MediatR. Controllers send typed write requests and read requests to dedicated application handlers instead of combining application orchestration with HTTP endpoint logic.
 
 ### Overview
 
@@ -85,18 +75,16 @@ This project has been updated to use a Pure CQRS (Command Query Responsibility S
 - Queries return read models and are handled by Query Handlers.
 - Handlers are orchestrated via an in-process mediator (for example MediatR or a lightweight custom IMediator).
 
-### Folder structure
+### Request structure
 
-Recommend the following layout under `src/EmployeeManagement.Api`:
+The current implementation uses these project folders:
 
-- `Application/Commands` — command DTOs (e.g., `CreateEmployeeCommand`, `UpdateEmployeeCommand`).
-- `Application/Queries` — query DTOs (e.g., `GetEmployeeByIdQuery`, `ListEmployeesQuery`).
-- `Application/Handlers/Commands` — command handlers.
-- `Application/Handlers/Queries` — query handlers.
-- `Application/ReadModels` — read-optimized DTOs returned by queries.
-- `Domain` — domain entities and domain services.
-- `Infrastructure/Persistence` — EF Core context, migrations, data seeding.
-- `Api/Controllers` — controllers that use `IMediator` to send commands/queries.
+- `Data/Command` - MediatR write requests.
+- `Data/Query` - MediatR read requests.
+- `Data/Handler` - MediatR request handlers.
+- `Data` - database context and repository implementation.
+- `Controllers` - HTTP API endpoints.
+- `Models` - shared employee entity.
 
 ### DI and registration
 
@@ -149,31 +137,20 @@ public class EmployeesController : ControllerBase
 
 ### Migration notes
 
-- The repository pattern has been replaced by command/query handlers. Refactor code that consumes `IEmployeeRepository` or `ApplicationDbContext` directly to use commands/queries.
-- Update existing tests that relied on repositories to either mock the mediator or test handlers directly.
-
-### Breaking changes
-
-- Removal of repository interfaces and direct DbContext usage in controllers and services. Update code accordingly.
-
-## Project structure
-- `src/` - API and production code
-  - `Repositories/` - repository interfaces and implementations
-  - `Application/` - command/query handlers and DTOs
-  - `Domain/` - domain entities and services
-  - `Infrastructure/` - EF Core context and migrations
-  - `Api/Controllers/` - API controllers
-- `tests/` - Unit and integration tests
-- `docs/` - Documentation (if present)  
+- Controllers should consume `IMediator` rather than repositories or `AppDbContext`.
+- Add operations should be implemented as command requests with command handlers.
+- Read operations should be implemented as query requests with query handlers.
+- Existing custom `ICommandHandler` and `IQueryHandler` contracts have been replaced by MediatR `IRequestHandler<,>` interfaces.
+- The repository remains an infrastructure dependency used inside handlers; it is not injected into controllers.
 
 ## Coding standards
-This repository follows coding and formatting rules specified in `.editorconfig` and `CONTRIBUTING.md`. Please follow those files when contributing.
+This repository follows coding and formatting rules specified in `.editorconfig` and `CONTRIBUTING.md` when those files are available.
 
 ## Contributing
-See `CONTRIBUTING.md` for contribution guidelines, commit message format, and branching strategy.
+See `CONTRIBUTING.md` for contribution guidelines and commit message format when available.
 
 ## License
-Add license information here (e.g., MIT). Replace this placeholder with the appropriate license file or link.
+License information has not been added yet. Add a license file and update this section before distributing the project.
 
 ## Contact
 For questions or support, open an issue in this repository.

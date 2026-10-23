@@ -13,9 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
-builder.Services.AddScoped<IQueryHandler<GetEmployeeByIdQuery, Employee>, GetEmployeeByIdHandler>();
-builder.Services.AddScoped<IQueryHandler<GetEmployeesQuery, IEnumerable<Employee>>, GetEmployeesHandler>();
-builder.Services.AddScoped<ICommandHandler<AddEmployeeCommand, Employee>, AddEmployeeHandler>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -1,9 +1,9 @@
-﻿using EmployeeManagement.Api.Data.Handler;
-using EmployeeManagement.Api.Models;
+﻿using EmployeeManagement.Api.Models;
+using MediatR;
 
 namespace EmployeeManagement.Api.Data.Query
 {
-    public class GetEmployeeByIdQuery : IQuery<Employee>
+    public class GetEmployeeByIdQuery : IRequest<Employee>
     {
         public int Id { get; }
 
