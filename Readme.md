@@ -1,156 +1,138 @@
-# EmployeeManagement.Api
+# Employee Management API
 
-A lightweight .NET 8 Web API for managing employee records. It uses ASP.NET Core controllers, Entity Framework Core with SQL Server LocalDB, and MediatR to dispatch commands and queries through dedicated handlers.
+A .NET 8 ASP.NET Core Web API for managing employee records. The solution separates HTTP endpoints, application requests, domain contracts, and persistence into distinct projects. MediatR dispatches employee commands and queries, while Entity Framework Core stores data in SQL Server.
 
 ## Features
-- RESTful employee operations
-- MediatR-based Pure CQRS request and handler separation
-- Employee add, list, and lookup operations
-- Repository-based Entity Framework Core data access
-- Swagger/OpenAPI documentation in development
-- SQL Server LocalDB configuration
 
-## Current architecture
-- `Controllers/EmployeesController.cs` receives HTTP requests and sends MediatR requests.
-- `Data/Command` contains write requests such as `AddEmployeeCommand`.
-- `Data/Query` contains read requests such as `GetEmployeeByIdQuery` and `GetEmployeesQuery`.
-- `Data/Handler` contains the corresponding MediatR request handlers.
-- `Data/IEmployeeRepository.cs` and `Data/EmployeeRepository.cs` encapsulate persistence operations.
-- `Data/AppDbContext.cs` configures Entity Framework Core for the employee entity.
-- `Models/Employee.cs` defines the employee data model.
+- List employees, retrieve an employee by ID, and add an employee
+- MediatR request handling with a CQRS-style separation of reads and writes
+- Repository abstraction between application logic and persistence
+- Strongly typed employee DTOs and configuration options
+- Entity Framework Core with SQL Server / LocalDB
+- Swagger UI in the Development environment
 
-This implementation separates application write and read requests into commands and queries. Controllers use MediatR instead of directly orchestrating employee operations, and dedicated handlers use the repository layer for persistence.
-
-## Prerequisites
-- .NET 8 SDK
-- Visual Studio 2022 17.5 or later, or the .NET CLI
-- SQL Server LocalDB for the default configuration
-
-## Getting started
-
-```powershell
-git clone https://github.com/rn-arya/EmployeeManagement.git
-cd EmployeeManagement/EmployeeManagement.Api
-dotnet restore
-dotnet build
-dotnet run
-```
-
-The default `DefaultConnection` setting uses SQL Server LocalDB and the `EmployeeManagement` database. Update `appsettings.json`, user secrets, or an environment-specific settings file for a different database.
-
-The Development launch profile opens Swagger. The default HTTP and HTTPS URLs are defined in `Properties/launchSettings.json`.
-
-## API endpoints
-
-| Method | Route | Description |
-|---|---|---|
-| `GET` | `/api/Employees/{id}` | Returns one employee by ID, or `404` when not found. |
-| `GET` | `/api/Employees` | Returns all employees. |
-| `POST` | `/api/Employees` | Adds an employee and returns it in the response. |
-
-The API is documented with Swagger while running in the Development environment.
-
-## Project structure
+## Solution structure
 
 ```text
-Controllers/EmployeesController.cs  HTTP endpoints and mediator dispatch
-Data/Command/                      MediatR write requests
-Data/Query/                        MediatR read requests
-Data/Handler/                      MediatR request handlers
-Data/AppDbContext.cs               Entity Framework Core database context
-Data/EmployeeRepository.cs         Employee persistence implementation
-Data/IEmployeeRepository.cs        Persistence contract
-Models/Employee.cs                 Employee entity
-Program.cs                         Application startup and dependency injection
+EmployeeManagement.Api/
+  Controllers/EmployeesController.cs  HTTP endpoints
+  Program.cs                          Application startup and service registration
+
+EmployeeManagement.Application/
+  Command/EmployeeCommand/            Employee write request and handler
+  Query/EmployeeQuery/                Employee read requests and handlers
+  DTOs/Employees/                     Employee API DTO
+  Options/ConnectionStringOptions.cs  Strongly typed connection settings
+
+EmployeeManagement.Domain/
+  Entities/Employee.cs                Employee entity and column mapping
+  Interface/IEmployeeRepository.cs    Persistence contract
+
+EmployeeManagement.Infrastructure/
+  Persistence/AppDbContext.cs         EF Core database context
+  Persistence/Repositories/           Repository implementation
 ```
 
-## Pure CQRS with MediatR (Unreleased)
+## Requirements
 
-This project uses Pure CQRS principles with MediatR. Controllers send typed write requests and read requests to dedicated application handlers instead of combining application orchestration with HTTP endpoint logic.
+- .NET 8 SDK
+- SQL Server LocalDB for the default development connection, or another configured SQL Server instance
 
-### Overview
+## Run locally
 
-- The application separates write operations (Commands) from read operations (Queries).
-- Commands modify state and are handled by Command Handlers.
-- Queries return read models and are handled by Query Handlers.
-- Handlers are orchestrated via an in-process mediator (for example MediatR or a lightweight custom IMediator).
+From the repository root:
 
-### Request structure
-
-The current implementation uses these project folders:
-
-- `Data/Command` - MediatR write requests.
-- `Data/Query` - MediatR read requests.
-- `Data/Handler` - MediatR request handlers.
-- `Data` - database context and repository implementation.
-- `Controllers` - HTTP API endpoints.
-- `Models` - shared employee entity.
-
-### DI and registration
-
-Register mediator and handler scanning in `Program.cs`:
-
-```csharp
-// Program.cs (example)
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
+```powershell
+dotnet restore EmployeeManagement.Api\EmployeeManagement.sln
+dotnet build EmployeeManagement.Api\EmployeeManagement.sln
+dotnet run --project EmployeeManagement.Api
 ```
 
-Remove previous repository registrations and replace with handler-based composition. If using a custom mediator, register mediator and handlers similarly.
+The default connection is configured in `EmployeeManagement.Api/appsettings.json`:
 
-### Controller usage example
-
-Controllers should use `IMediator` to send commands/queries instead of calling repositories or DbContext directly:
-
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public class EmployeesController : ControllerBase
+```json
 {
-    private readonly IMediator _mediator;
-
-    public EmployeesController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create(CreateEmployeeCommand command)
-    {
-        var result = await _mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id)
-    {
-        var query = new GetEmployeeByIdQuery(id);
-        var employee = await _mediator.Send(query);
-        return Ok(employee);
-    }
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=EmployeeManagement;Trusted_Connection=True;TrustServerCertificate=True;"
+  }
 }
 ```
 
-### Testing guidance
+Change `DefaultConnection` to target another SQL Server. For local development, prefer user secrets or environment-specific configuration for connection details rather than committing sensitive values. In Development, Swagger UI is available at `/swagger`.
 
-- Unit-test command and query handlers in isolation by mocking dependencies (DbContext, repositories, external services).
-- Integration tests can use in-memory database or test containers for persistence.
+## API
 
-### Migration notes
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/Employees` | Returns the employee collection. |
+| `GET` | `/api/Employees/{id}` | Retrieves an employee by ID. |
+| `POST` | `/api/Employees` | Adds an employee and returns the employee DTO. |
 
-- Controllers should consume `IMediator` rather than repositories or `AppDbContext`.
-- Add operations should be implemented as command requests with command handlers.
-- Read operations should be implemented as query requests with query handlers.
-- Existing custom `ICommandHandler` and `IQueryHandler` contracts have been replaced by MediatR `IRequestHandler<,>` interfaces.
-- The repository remains an infrastructure dependency used inside handlers; it is not injected into controllers.
+Example `POST /api/Employees` request:
 
-## Coding standards
-This repository follows coding and formatting rules specified in `.editorconfig` and `CONTRIBUTING.md` when those files are available.
+```json
+{
+  "empNo": 9999,
+  "birthDate": "1990-01-15T00:00:00",
+  "firstName": "Jane",
+  "lastName": "Doe",
+  "gender": "F",
+  "hireDate": "2024-01-10T00:00:00"
+}
+```
 
-## Contributing
-See `CONTRIBUTING.md` for contribution guidelines and commit message format when available.
+The current POST action returns `200 OK`. The GET-by-ID action is intended to return `404 Not Found` for an unknown ID, but that path should be verified/fixed in the handler before relying on the status code: the repository can return `null`, and the handler currently dereferences the result.
+
+## Architecture and request flow
+
+The application uses a CQRS-style split: commands perform writes and queries perform reads. Both use the same repository and database; this is not a separate read/write database architecture.
+
+```text
+Client
+  | HTTP request
+  v
+EmployeesController
+  | sends command/query
+  v
+IMediator --> Matching request handler
+                    |
+                    v
+             IEmployeeRepository
+                    |
+                    v
+               AppDbContext
+                    |
+                    v
+              SQL Server
+                    |
+                    v
+           Employee entity / DTO
+                    |
+                    v
+             HTTP response
+```
+
+1. The controller binds the HTTP request and sends a MediatR request, such as `GetEmployeesQuery` or `AddEmployeeCommand`.
+2. MediatR resolves the corresponding handler registered from the Application assembly.
+3. The handler calls `IEmployeeRepository`; read handlers map returned entities to `EmployeeDto`.
+4. The repository uses `AppDbContext` and EF Core to access SQL Server.
+5. The controller translates the handler result into an HTTP response.
+
+## Dependency injection and configuration
+
+`Program.cs` composes the application and infrastructure registrations:
+
+```csharp
+builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddInfrastructure();
+```
+
+- **Options binding:** `AddApplication` binds the `ConnectionStrings` configuration section to `ConnectionStringOptions`. Its `DefaultConnection` property provides a strongly typed way to read the configured connection string.
+- **MediatR registration:** `AddApplication` scans the Application assembly to register request handlers.
+- **DbContext registration:** `AddInfrastructure` registers `AppDbContext` with `AddDbContext` and configures the SQL Server provider using `IOptionsMonitor<ConnectionStringOptions>`. `AddDbContext` uses a scoped lifetime by default.
+- **Repository registration:** Infrastructure maps `IEmployeeRepository` to `EmployeeRepository` with a scoped lifetime. Handlers depend on the interface, not the concrete database implementation.
+- **Constructor injection:** ASP.NET Core provides `IMediator` to `EmployeesController`, and the DI container supplies the repository and DbContext dependencies to handlers and infrastructure services.
 
 ## License
-License information has not been added yet. Add a license file and update this section before distributing the project.
 
-## Contact
-For questions or support, open an issue in this repository.
+No license file is currently included. Add a license before redistributing or publishing the project.

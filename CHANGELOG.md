@@ -7,37 +7,35 @@ https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 ### Added
-- Added MediatR-based command/query handling for employee operations.
-- Added `AddEmployeeCommand` and `GetEmployeesQuery` request types.
-- Added dedicated handlers for adding, listing, and retrieving employees by ID.
-- Added automatic MediatR handler discovery during application startup.
+- Added a layered .NET 8 solution structure with API, Application, Domain, and Infrastructure projects.
+- Added MediatR-based CQRS request handling for employee operations.
+- Added `AddEmployeeCommand`, `GetEmployeesQuery`, and `GetEmployeeByIdQuery` request types.
+- Added DTO-based employee responses and repository-backed handler logic.
+- Added EF Core SQL Server LocalDB configuration for employee persistence.
+- Added Swagger support for local API exploration in development.
 
 ### Changed
-- Updated `EmployeesController` to send commands and queries through `IMediator` instead of orchestrating employee operations directly.
-- Updated MediatR request handlers to implement the library interfaces `IRequestHandler<,>` and return application responses.
-- Updated employee commands and queries to implement `IRequest<,>` or `IRequest<>`.
-- Updated `Program.cs` to register MediatR and remove manual custom handler registrations.
-- Added MediatR 14.2.0 to the project dependencies.
+- Updated `EmployeesController` to mediate employee operations through `IMediator`.
+- Reworked the project documentation to reflect the current folder layout and architecture.
+- Centralized dependency registration using the Application and Infrastructure extension methods.
+- Clarified the default LocalDB connection string and startup behavior in the project setup docs.
 
 ### Fixed
-- Removed the custom `ICommandHandler` and `IQueryHandler` abstractions that were redundant with MediatR interfaces.
-- Corrected the employee controller flow to use the current request/handler contracts.
+- Corrected the README to match the actual project structure and request flow.
+- Ensured the documented API routes reflect the current endpoints: `GET /api/Employees`, `GET /api/Employees/{id}`, and `POST /api/Employees`.
 
-### Breaking
-- Existing custom code that implements `ICommandHandler` or `IQueryHandler` must use the MediatR `IRequestHandler<,>` interface instead.
-- Direct controller-level orchestration has been replaced with mediator sends.
-
-### Architecture note
-- Employee reads and writes now use MediatR handlers, while persistence remains behind `IEmployeeRepository` and `EmployeeRepository`. This is a CQRS-style command/query split with a shared repository and database context; it is not a separate read/write database implementation.
+### Notes
+- The current implementation uses a shared repository abstraction for both reads and writes; the design is CQRS-oriented without a separate read/write database implementation.
 
 ## [0.1.0] - 2026-10-16
 ### Added
-- Project initial commit and baseline API for employee management.
-- .NET 8 target and project scaffolding.
+- Initial project scaffolding for the employee management API.
+- .NET 8 ASP.NET Core application setup with basic employee API endpoints.
+- Initial project documentation and change tracking for the baseline release.
 
 ---
 
 Release and usage notes:
-- Continue adding development changes under `Unreleased`.
-- When cutting a release, rename `Unreleased` to the release version (for example `1.0.0`) and add the release date.
-- See `CONTRIBUTING.md` for release and commit guidelines.
+- Continue adding changes under `Unreleased` as the project evolves.
+- When preparing a release, rename `Unreleased` to the target version and include the release date.
+- Keep the changelog aligned with the actual code and usage of the API.
