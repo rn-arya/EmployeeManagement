@@ -1,11 +1,8 @@
-﻿using EmployeeManagement.Api.Data;
-using EmployeeManagement.Api.Data.Command;
-using EmployeeManagement.Api.Data.Handler;
-using EmployeeManagement.Api.Data.Query;
-using EmployeeManagement.Api.Models;
+﻿using EmployeeManagement.Application.Command.EmployeeCommand;
+using EmployeeManagement.Application.DTOs.Employees;
+using EmployeeManagement.Application.Query.EmployeeQuery;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.Api.Controllers
 {
@@ -17,7 +14,7 @@ namespace EmployeeManagement.Api.Controllers
         public EmployeesController(IMediator mediator) { this.mediator = mediator; }
        
         [HttpGet("{id}")]
-        public async Task<ActionResult<Employee>> GetEmployeeById(int id)
+        public async Task<ActionResult<EmployeeDto>> GetEmployeeById(int id)
         {
             var employee = await mediator.Send(new GetEmployeeByIdQuery(id));
             if (employee == null)
@@ -28,13 +25,13 @@ namespace EmployeeManagement.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
+        public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
         {
             return Ok(await mediator.Send(new GetEmployeesQuery()));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Employee>> AddEmployee(Employee employee)
+        public async Task<ActionResult<EmployeeDto>> AddEmployee(EmployeeDto employee)
         {
             await mediator.Send(new AddEmployeeCommand(employee));
             return Ok(employee);
